@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.penfgyu</groupId>
+        <artifactId>pengfyu-gateway</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <groupId>com.pengfyu</groupId>
+    <artifactId>zuul</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>zuul</name>
+    <description>Demo project for Spring Boot</description>
+
+    <properties>
+        <java.version>1.8</java.version>
+    </properties>
+
+    <dependencies>
+        <!--<dependency>-->
+            <!--<groupId>org.springframework.security</groupId>-->
+            <!--<artifactId>spring-security-jwt</artifactId>-->
+            <!--<version>1.0.9.RELEASE</version>-->
+        <!--</dependency>-->
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>0.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.xiaoleilu</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>3.2.3</version>
+        </dependency>
+        <!-- redisson -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.7.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+
+
+
+</project>
