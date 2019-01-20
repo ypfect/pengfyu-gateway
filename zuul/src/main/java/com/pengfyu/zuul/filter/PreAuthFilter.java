@@ -14,9 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by jianglei on 18/7/25
- */
+
 @Service
 public class PreAuthFilter extends AbstractPreAuthenticatedProcessingFilter implements Filter {
 
