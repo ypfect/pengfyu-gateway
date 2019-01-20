@@ -1,7 +1,6 @@
 package com.pengfyu.zuul.springsecurity.validate;
 
 import com.pengfyu.zuul.common.GatewayRet;
-import org.springframework.web.context.request.ServletWebRequest;
 
 /**
  * @Author stanley.yu
@@ -12,22 +11,19 @@ import org.springframework.web.context.request.ServletWebRequest;
 public interface ValidateCodeRepositoryService {
     /**
      * 保存验证码
-     * @param request
+     * @param mobile
      * @param code
-     * @param validateCodeType
      */
-    GatewayRet save(ServletWebRequest request, ValidateCode code, ValidateCodeType validateCodeType);
+    GatewayRet save(String mobile,String code);
     /**
      * 获取验证码
-     * @param request
-     * @param validateCodeType
+     * @param mobile
      * @return
      */
-    GatewayRet get(ServletWebRequest request, ValidateCodeType validateCodeType);
+    GatewayRet get(String mobile);
     /**
      * 移除验证码
-     * @param request
-     * @param codeType
+     * @param mobile
      */
-    GatewayRet remove(ServletWebRequest request, ValidateCodeType codeType);
+    GatewayRet remove(String mobile);
 }
