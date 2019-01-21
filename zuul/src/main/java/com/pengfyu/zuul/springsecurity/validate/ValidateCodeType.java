@@ -4,7 +4,9 @@ package com.pengfyu.zuul.springsecurity.validate;
 import com.pengfyu.zuul.springsecurity.properties.SecurityConstants;
 
 /**
- * enum 可以定义抽象方法，每个枚举对象返回对应实现
+ * @Author stanley.yu
+ * @Description  enum 可以定义抽象方法，每个枚举对象返回对应实现
+ * @Date 2019/1/20 22:10
  */
 public enum ValidateCodeType {
 	
