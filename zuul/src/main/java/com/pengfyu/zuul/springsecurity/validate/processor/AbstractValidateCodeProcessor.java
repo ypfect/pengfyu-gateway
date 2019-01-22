@@ -70,11 +70,6 @@ public abstract class AbstractValidateCodeProcessor <C extends ValidateCode> imp
             throw new ValidateCodeException(nameOnValidate + "验证码不存在");
         }
 
-        if (validateCodeInRedisson.isExpired()) {
-            repositoryService.remove(servletWebRequest);
-            throw new ValidateCodeException(nameOnValidate + "验证码已过期");
-        }
-
         if (!StringUtils.equals(validateCodeInRedisson.getCode(), codeInRequest)) {
             throw new ValidateCodeException(nameOnValidate + "验证码不匹配");
         }

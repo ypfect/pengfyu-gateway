@@ -1,9 +1,11 @@
 package com.pengfyu.zuul.springsecurity.validate.sms;
 
 import com.pengfyu.zuul.common.GatewayRet;
+import com.pengfyu.zuul.common.ValidateCodeException;
 import com.pengfyu.zuul.redisson.RedissonUtils;
 import com.pengfyu.zuul.springsecurity.validate.ValidateCode;
 import com.pengfyu.zuul.springsecurity.validate.ValidateCodeRepositoryService;
+import org.apache.commons.lang.StringUtils;
 import org.redisson.api.RBucket;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -28,24 +30,42 @@ public class SmsValidateCodeRepositoryService implements ValidateCodeRepositoryS
         //存到redis
         String keyCode = key.getCode();
         RBucket<String> rBucket = RedissonUtils.getRBucket(uuid.toString());
-        rBucket.set(keyCode,60,TimeUnit.SECONDS);
+        rBucket.set(keyCode,200,TimeUnit.SECONDS);
         return GatewayRet.successExploreRet();
     }
 
     @Override
     public ValidateCode get(ServletWebRequest request) {
-        String uuidKey = (String)request.getRequest().getAttribute(" smsCodeCookie");
-        RBucket<String> rBucket = RedissonUtils.getRBucket(uuidKey);
-        long toLive = rBucket.remainTimeToLive();
+        Cookie[] cookies = request.getRequest().getCookies();
+        String key = "";
+        for (Cookie cookie : cookies) {
+            if ("smsCodeCookie".equals(cookie.getName())){
+                key=cookie.getValue();
+            }
+        }
+        if (StringUtils.isEmpty(key)){
+            throw new ValidateCodeException("can't find the key by cookie...");
+        }
+        RBucket<String> rBucket = RedissonUtils.getRBucket(key);
+        //long toLive = rBucket.remainTimeToLive();//判断时间没有必要，如果过期了本来也没了。。只需要判断是否还存在toLive<=0
         String validateKeyInRedis = rBucket.get();
-        ValidateCode validateCode = new ValidateCode(validateKeyInRedis, (int) toLive);
+        if ( validateKeyInRedis== null){
+            return null;
+        }
+        ValidateCode validateCode = new ValidateCode(validateKeyInRedis, -1);
         return validateCode;
     }
 
     @Override
     public GatewayRet remove(ServletWebRequest request) {
-        String uuidKey = (String)request.getRequest().getAttribute(" smsCodeCookie");
-        RedissonUtils.getRBucket(uuidKey).delete();
+        Cookie[] cookies = request.getRequest().getCookies();
+        String key = "";
+        for (Cookie cookie : cookies) {
+            if ("smsCodeCookie".equals(cookie.getName())){
+                key=cookie.getValue();
+            }
+        }
+        RedissonUtils.getRBucket(key).delete();
         return GatewayRet.successExploreRet();
     }
 }
