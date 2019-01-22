@@ -20,7 +20,7 @@ import org.springframework.web.context.request.ServletWebRequest;
  * @Date 2019/1/20 22:10
  */
 @Component("smsValidateCodeProcessor")
-public class SmsCodeProcessor extends AbstractValidateCodeProcessor<ValidateCode> {
+public class SmsValidateCodeProcessor extends AbstractValidateCodeProcessor<ValidateCode> {
 
 	/**
 	 * 短信验证码发送器

@@ -50,34 +50,33 @@ public abstract class AbstractValidateCodeProcessor <C extends ValidateCode> imp
      * @param servletWebRequest
      */
     @Override
-    public void validate(ServletWebRequest servletWebRequest) {
-        ValidateCodeType processorType = getProcessorType(servletWebRequest);
-        String nameOnValidate = processorType.getParamNameOnValidate();
+    public void validate(ServletWebRequest servletWebRequest,ValidateCodeType type) {
+        String nameOnValidate = type.getParamNameOnValidate();
         ValidateCodeRepositoryService repositoryService = repositoryServiceMap.get(nameOnValidate + "ValidateCodeRepositoryService");
         C validateCodeInRedisson =(C) repositoryService.get(servletWebRequest);
         String codeInRequest;
         try {
             codeInRequest = ServletRequestUtils.getStringParameter(servletWebRequest.getRequest(),
-                    processorType.getParamNameOnValidate());
+                    nameOnValidate);
         } catch (ServletRequestBindingException e) {
             throw new ValidateCodeException("获取验证码的值失败");
         }
 
         if (StringUtils.isBlank(codeInRequest)) {
-            throw new ValidateCodeException(processorType + "验证码的值不能为空");
+            throw new ValidateCodeException(nameOnValidate + "验证码的值不能为空");
         }
 
         if (validateCodeInRedisson == null) {
-            throw new ValidateCodeException(processorType + "验证码不存在");
+            throw new ValidateCodeException(nameOnValidate + "验证码不存在");
         }
 
         if (validateCodeInRedisson.isExpired()) {
             repositoryService.remove(servletWebRequest);
-            throw new ValidateCodeException(processorType + "验证码已过期");
+            throw new ValidateCodeException(nameOnValidate + "验证码已过期");
         }
 
         if (!StringUtils.equals(validateCodeInRedisson.getCode(), codeInRequest)) {
-            throw new ValidateCodeException(processorType + "验证码不匹配");
+            throw new ValidateCodeException(nameOnValidate + "验证码不匹配");
         }
 
         repositoryService.remove(servletWebRequest);
@@ -106,8 +105,9 @@ public abstract class AbstractValidateCodeProcessor <C extends ValidateCode> imp
         ValidateCodeType type = getProcessorType(request);
         String onValidate = type.getParamNameOnValidate();
         //获取实现中的对应类型的生成器
-        ValidateCodeGenerator codeGenerator = validateCodeGeneratorMap.get(onValidate + "Generator");
+        ValidateCodeGenerator codeGenerator = validateCodeGeneratorMap.get(onValidate + "CodeGenerator");
         if (codeGenerator == null) {
+            System.out.println("验证码生成器\" + onValidate + \"CodeGenerator\" + \"不存在\"");
             throw new ValidateCodeException("验证码生成器" + onValidate + "CodeGenerator" + "不存在");
         }
 

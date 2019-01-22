@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
  * @Date 2019/1/21 22:42
  */
 @Service
-public class SmsCodeValidateCodeRepositoryService implements ValidateCodeRepositoryService {
+public class SmsValidateCodeRepositoryService implements ValidateCodeRepositoryService {
 
     @Override
     public GatewayRet save(ServletWebRequest request, ValidateCode key) {
