@@ -1,18 +1,15 @@
 package com.pengfyu.zuul.springsecurity.validate.processor;
 
+import com.pengfyu.zuul.common.GatewayRet;
 import com.pengfyu.zuul.common.ValidateCodeException;
-import com.pengfyu.zuul.redisson.RedissonUtils;
 import com.pengfyu.zuul.springsecurity.validate.*;
-import com.pengfyu.zuul.util.TimeUtil;
 import org.apache.commons.lang.StringUtils;
-import org.redisson.api.RBucket;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.ServletRequestBindingException;
+import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.context.request.ServletWebRequest;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @Author stanley.yu
@@ -28,9 +25,10 @@ public abstract class AbstractValidateCodeProcessor <C extends ValidateCode> imp
     @Autowired
     private Map<String,ValidateCodeGenerator> validateCodeGeneratorMap;
 
-    // 依赖搜索
+
     @Autowired
     private Map<String,ValidateCodeRepositoryService> repositoryServiceMap;
+
 
 
     /**
@@ -43,38 +41,64 @@ public abstract class AbstractValidateCodeProcessor <C extends ValidateCode> imp
     @Override
     public void create(ServletWebRequest request) throws Exception {
         C generate = generate(request);
-        redissonSave(request,generate);
-        send(request, generate);
-
+        redissonSave(request, generate);
+        sendCode(request,generate);
     }
-
-    protected abstract void send(ServletWebRequest request, C generate);
 
     /**
-     * save validateCode in redisson strategy
-     * search from applicationContext where adapter validateType
-     * @param generate
-     * @param request
+     * 验证方法。
+     * @param servletWebRequest
      */
-    private void redissonSave(ServletWebRequest request,C generate) {
-        ValidateCodeType type = getProcessorType(request);
-        String onValidate = type.getParamNameOnValidate();
-        ValidateCodeRepositoryService repositoryService = repositoryServiceMap.get(onValidate + "ValidateCodeRepositoryService");
-        repositoryService.save(request,generate);
-    }
-
-    private void generateRedissonKey(C generate) {
-        String code = generate.getCode();
-        int expireSecond = TimeUtil.calculationTimeDiff(LocalDateTime.now(), generate.getExpireTime());
-        RBucket<Object> bucket = RedissonUtils.getRBucket(code);
-//        bucket.setAsync()
-
-    }
-
-
     @Override
     public void validate(ServletWebRequest servletWebRequest) {
+        ValidateCodeType processorType = getProcessorType(servletWebRequest);
+        String nameOnValidate = processorType.getParamNameOnValidate();
+        ValidateCodeRepositoryService repositoryService = repositoryServiceMap.get(nameOnValidate + "ValidateCodeRepositoryService");
+        C validateCodeInRedisson =(C) repositoryService.get(servletWebRequest);
+        String codeInRequest;
+        try {
+            codeInRequest = ServletRequestUtils.getStringParameter(servletWebRequest.getRequest(),
+                    processorType.getParamNameOnValidate());
+        } catch (ServletRequestBindingException e) {
+            throw new ValidateCodeException("获取验证码的值失败");
+        }
 
+        if (StringUtils.isBlank(codeInRequest)) {
+            throw new ValidateCodeException(processorType + "验证码的值不能为空");
+        }
+
+        if (validateCodeInRedisson == null) {
+            throw new ValidateCodeException(processorType + "验证码不存在");
+        }
+
+        if (validateCodeInRedisson.isExpired()) {
+            repositoryService.remove(servletWebRequest);
+            throw new ValidateCodeException(processorType + "验证码已过期");
+        }
+
+        if (!StringUtils.equals(validateCodeInRedisson.getCode(), codeInRequest)) {
+            throw new ValidateCodeException(processorType + "验证码不匹配");
+        }
+
+        repositoryService.remove(servletWebRequest);
+
+    }
+
+
+    protected abstract GatewayRet sendCode(ServletWebRequest request, C generate) throws ServletRequestBindingException;
+
+    /**
+     * 根据请求获取对应的处理类，做redisson保存操作
+     * @param request
+     * @param generate
+     * @return
+     */
+    private  GatewayRet redissonSave(ServletWebRequest request, C generate){
+        ValidateCodeType processorType = getProcessorType(request);
+        String nameOnValidate = processorType.getParamNameOnValidate();
+        ValidateCodeRepositoryService repositoryService = repositoryServiceMap.get(nameOnValidate + "ValidateCodeRepositoryService");
+        GatewayRet ret = repositoryService.save(request, generate);
+        return ret;
     }
 
 
@@ -82,10 +106,11 @@ public abstract class AbstractValidateCodeProcessor <C extends ValidateCode> imp
         ValidateCodeType type = getProcessorType(request);
         String onValidate = type.getParamNameOnValidate();
         //获取实现中的对应类型的生成器
-        ValidateCodeGenerator codeGenerator = validateCodeGeneratorMap.get(onValidate + "CodeGenerator");
+        ValidateCodeGenerator codeGenerator = validateCodeGeneratorMap.get(onValidate + "Generator");
         if (codeGenerator == null) {
             throw new ValidateCodeException("验证码生成器" + onValidate + "CodeGenerator" + "不存在");
         }
+
         return (C)codeGenerator.generate(request);
     }
 
@@ -99,17 +124,5 @@ public abstract class AbstractValidateCodeProcessor <C extends ValidateCode> imp
         String type = StringUtils.substringAfter(requestURI, "/code/");
         return ValidateCodeType.valueOf(StringUtils.upperCase(type));
     }
-
-
-    public String getMobileNumber(ServletWebRequest request){
-        String mobile = (String) request.getRequest().getAttribute("mobile");
-        return mobile;
-    }
-
-
-    // ~ 抽象方法
-    // ======================================================================================
-
-
 
 }

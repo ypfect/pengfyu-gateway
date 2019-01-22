@@ -18,6 +18,12 @@ public class GatewayRet {
         GatewayRet ret = new GatewayRet(true,msg,code);
         return  ret;
     }
+
+    public static GatewayRet successExploreRet(){
+        GatewayRet ret = new GatewayRet();
+        ret.setSuccess(true);
+        return  ret;
+    }
     public static GatewayRet successExploreRet(int code,String msg,Object data){
         GatewayRet ret = new GatewayRet(true,msg,data,code);
         return  ret;

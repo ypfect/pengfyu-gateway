@@ -13,18 +13,18 @@ public interface ValidateCodeRepositoryService {
     /**
      * 保存验证码
      * @param request
-     * @param code
+     * @param key
      */
-    GatewayRet save(ServletWebRequest request, ValidateCode code);
+    GatewayRet save(ServletWebRequest request,ValidateCode key);
     /**
      * 获取验证码
      * @param request
      * @return
      */
-    GatewayRet get(ServletWebRequest request, ValidateCode code);
+    ValidateCode get(ServletWebRequest request);
     /**
      * 移除验证码
      * @param request
      */
-    GatewayRet remove(ServletWebRequest request, ValidateCode code);
+    GatewayRet remove(ServletWebRequest request);
 }
